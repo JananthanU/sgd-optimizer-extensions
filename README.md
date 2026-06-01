@@ -1,26 +1,12 @@
 # SGD Optimizer Extensions for Linear Regression
 
 Five extensions to a gradient-descent linear regression pipeline, built on a
-custom computational graph framework (`cgnodes.py`). No PyTorch or TensorFlow:
-all forward passes and gradients are implemented from scratch.
+custom computational graph (`cgnodes.py`) using rent price data from Lausanne.
+No PyTorch or TensorFlow: all forward passes and gradients implemented from scratch.
 
----
-
-## Dataset
-
-Rent prices of apartments in Lausanne (living area in m², rent in CHF).
-
----
-
-## Extensions
-
-| # | Extension | Key idea |
-|---|---|---|
-| 1 | **Input Standardisation** | Zero-mean / unit-variance normalisation enables a single shared learning rate |
-| 2 | **Early Stopping** | Halt training when loss falls below a threshold for `patience` epochs |
-| 3 | **Learning Rate Decay on Plateau** | Halve the LR instead of stopping, allows continued refinement |
-| 4 | **Quadratic Model** | Extend the hypothesis with an x² term for better fit on non-linear data |
-| 5 | **Adam Optimizer** | First and second moment estimates with bias correction, converges within 0.03% of the analytical minimum |
+> **Adam converges within 0.03% of the closed-form analytical minimum**
+> (J = 104,949 vs. reference 104,915).
+> All five extensions benchmarked against the normal-equations solution.
 
 ---
 
@@ -42,23 +28,15 @@ All methods compared against the closed-form normal-equations solution (J = 104,
 
 ---
 
-## Visualisations
+## Approach
 
-### Quadratic vs. linear model fit
-
-The quadratic extension reduces MSE by around 10% compared to the linear baseline
-and tracks the curvature in the data at larger living areas.
-
-<img src="assets/quadratic_model.png" alt="Linear vs quadratic model" width="750">
-
-### Adam: loss trajectory and effective learning rates
-
-Adam reaches a half-MSE objective of 104,949 at epoch 252, within 0.03% of the
-analytical minimum. The effective learning rate for θ₁ stabilises around 6×10⁻⁵,
-roughly 167× lower than for θ₀, directly compensating for the gradient scale
-imbalance caused by raw living-area features.
-
-<img src="assets/adam_learning_rates.png" alt="Adam loss and effective learning rates" width="1000">
+| # | Extension | Key idea |
+|---|---|---|
+| 1 | **Input Standardisation** | Zero-mean / unit-variance normalisation enables a single shared learning rate |
+| 2 | **Early Stopping** | Halt training when loss falls below a threshold for `patience` epochs |
+| 3 | **Learning Rate Decay on Plateau** | Halve the LR instead of stopping, allows continued refinement |
+| 4 | **Quadratic Model** | Extend the hypothesis with an x² term for better fit on non-linear data |
+| 5 | **Adam Optimizer** | First and second moment estimates with bias correction |
 
 ---
 
@@ -79,30 +57,26 @@ The linear model systematically overpredicts rent at large living areas. Adding 
 x² term corrects this and achieves around 10% lower MSE, confirmed against the
 quadratic normal-equations reference.
 
-**All SGD variants converge to the same solution neighbourhood.**
-Methods that address gradient scale (normalised SGD, Adam, separate LRs) all reach
-a final J within 35 units of the analytical minimum. The main difference is in
-training stability and the amount of manual tuning required.
+**All scale-aware methods converge to the same solution neighbourhood.**
+Normalised SGD, Adam, and separate learning rates all reach a final J within 35
+units of the analytical minimum. The main difference is training stability and the
+amount of manual tuning required.
 
 ---
 
-## Structure
+## Visualisations
 
-```
-sgd-optimizer-extensions/
-├── sgd_optimizer_extensions.ipynb
-├── cgnodes.py
-├── assets/
-│   ├── quadratic_model.png
-│   └── adam_learning_rates.png
-└── data/
-    └── lausanne-appart.csv
-```
+### Quadratic vs. linear model fit
 
-## Requirements
+The quadratic extension reduces MSE by around 10% compared to the linear baseline
+and tracks the curvature in the data at larger living areas.
 
-```
-numpy
-pandas
-matplotlib
-```
+<img src="assets/quadratic_model.png" alt="Linear vs quadratic model" width="750">
+
+### Adam: loss trajectory and effective learning rates
+
+Adam reaches J = 104,949 at epoch 252, within 0.03% of the analytical minimum.
+The effective learning rate for θ₁ stabilises around 6×10⁻⁵, roughly 167× lower
+than for θ₀, directly compensating for the gradient scale imbalance.
+
+<img src="assets/adam_learning_rates.png" alt="Adam loss and effective learning rates" width="1000">
